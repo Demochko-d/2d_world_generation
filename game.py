@@ -1,17 +1,6 @@
 import pygame
 import random
-
-# начальная позиция и состояние
-start_y = 7
-min_y = -40
-seam_mode = (1, 0)
-button_green = True
-button_green_2 = True
-button_green_3 = True
-to_nigth = True
-rain = False
-biom = 'Поле'
-time_counter = 0
+from config_gen import * # все параметры генерации
 
 # иниализация и настройки экрана
 pygame.init()
@@ -24,118 +13,48 @@ font_plus = pygame.font.SysFont("arial", 24)
 clock = pygame.time.Clock()
 FPS = 120
 run = True
-
-# настройки камеры
-land = []
-camera_x = 15
-camera_y = 0
-end_d, start_d = 0, 0
-camera_speed_x_std = 20
-camera_speed_y_std = 12
-camera_speed_x = camera_speed_x_std
-camera_speed_y = camera_speed_y_std
-speed_2 = 2
-speed_3 = 5
-
-ne_trogat = 38
-
-# настройки размера
-p_d_x = 15
-display_x = p_d_x * 2
-display_y = 18
-x_generete = display_x + camera_x
 pixel_size = (WIDTH / display_x)
 size_draw = pixel_size + 1
+hat_width = pixel_size
+hat_height = pixel_size * 0.45
+stem_width = size_draw * 0.25
+stem_height = size_draw * 0.45
 
-# цвета
-green = (20, 180, 0)
-dark_green = (20, 130, 0)
-brown = (90, 40, 0)
-grey = (85, 75, 70)
-dark_grey = (60, 60, 70)
-super_dark_grey = (30, 30, 40)
-gold = (220, 220, 0)
-diamond = (0, 190, 240)
-emirald = (0, 190, 120)
-rubi = (190, 10, 10)
-coald = (20, 10, 0)
-iron = (105, 105, 105)
-color_ore_list = (gold, diamond, emirald, rubi, coald, iron)
-text_color = (255, 255, 255)
-red = (200, 0, 0)
-black = (0, 0, 0)
-pesoc = (250, 220, 110)
-dark_pesoc = (200, 180, 80)
-snow = (210, 200, 210)
-ice_snow = (190, 180, 240)
-pink  = (255, 140, 130)
-yellow = (255, 255, 0)
-brown_gray = (75, 60, 50)
-color_flower = (red, pesoc, pink)
-sky_color = [140, 140, 235]
-mushroom_color_st = (150, 90, 30)
-mushroom_color_p = (120, 40, 0)
-mushroom_color_m = (230, 50, 30)
+# доп константы
+land = []
+ne_trogat = 38
 
-# настройки генерации
-day_time = 30  # скорость смены дня и ночи (больше - дольше)
-nerownost = 0.25
-obriv = 0.01
-tree_shans = 0.05
-ore_shans = 0.35
-ore_stak = 1.6 # чем больше тем кучнее руда
-flower_shans = 0.06
-mushroom_shans = 0.012
-new_biome_shans = 0.011
-rain_shans = 0.0004
-drop_leave_shans = 0.0017
-rain_drops = []  # список капель дождя
-rain_intensity = (2, 6, 7, 8, 9, 20)  # сколько капель генерируемое за фпс
-intensity = 8
-rain_speed = 13  # скорость падения и размер капель
-biom_config = {
-    'Поле': (0.25, 0.045, 1, 0.06, brown, 0.011, 0.01),
-    'Пустыня': (0.1, 0.012, 1, 0.017, brown, 0.002, 0.022),
-    'Скалы': (0.85, 0.006, 3, 0.005, brown_gray, 0.003, 0.09),
-    'Тайга': (0.35, 0.019, 1, 0.007, brown, 0.005, 0.008),
-    'Лес': (0.3, 0.175, 1, 0.053, brown, 0.105, 0.015),
-} # не все параметры указываються в процентах из-за особеностей генерации
-# параметры генерации каждого бюиома, сначала неровность, потом кол - во деревьев,
-# потом максимальное отличие высоты между соседними блоками, потом количество цветов, потом цвет "земли",
-# потом шанс на гриб, потом количество обрывов
-''''
-{Пример':
- ('неровности', 'шанс на дереве', 'максимальный перепад высот', 'шанс на цветок', 'цвет земли', 'шанс на гриб'
- 'шанс на обрыв')}
-'''
-list_biome = tuple(biom_config.keys())
-
-
-class Part:
+class Chunck:
 
     def __init__(
-            self, x=0, y=start_y, tree=None, ore=None, flower=None, dirt_color=brown, mushroom=None, color_ore=None):
+            self, x=0, y=start_y,
+            tree=None, ore=None, flower=None, dirt_color=brown, mushroom=None, color_ore=None, dop_obj=None):
 
         self.x = x
         self.y = y
         self.tree = tree
         self.ore = ore
         self.solor_ore = color_ore
-        self.solor_tree = (random.randint(17, 29), random.randint(160, 196), 0)
+        if biom != 'Тайга': self.solor_tree = (random.randint(17, 29),
+                                               random.randint(160, 196), 0)
+        else: self.solor_tree = (random.randint(180, 190)
+                                     , random.randint(185, 200), random.randint(225, 240))
         self.dual_tree = random.choice((True, False, False, False))
         self.type = biom
         self.flower_color = flower
         self.dirt_color = dirt_color
-        self.color_stvol = (random.randint(80, 105), random.randint(30, 62), random.randint(0, 8))
+        self.color_stvol = (random.randint(80, 98), random.randint(30, 62), random.randint(0, 8))
         self.color_mushroom = mushroom
         self.leave_drop = 0
+        self.dop_obj = dop_obj
 
         if self.tree: self.koff = (None, None, None, None, 2, 2.2, 2.5, 2.9, 3.3, 3.7, 4)[self.tree]
 
-        if biom == 'Лес' or biom == 'Поле': self.color_g = (green, dark_green)[x % 2]
+        if biom == 'Лес' or biom == 'Поле' or biom == 'Цветочная поляна': self.color_g = (green, dark_green)[x % 2]
         elif biom == 'Пустыня': self.color_g = (pesoc, dark_pesoc)[x % 2]
         elif biom == 'Скалы': self.color_g = grey
         elif biom == 'Тайга': self.color_g = (snow, ice_snow)[x % 2]
+        elif biom == 'Пустошь': self.color_g = (dark_grey, super_dark_grey)[x % 2]
 
 
     def draw(self):
@@ -170,6 +89,8 @@ class Part:
         elif self.color_mushroom is not None:
             self.draw_mushroom(real_x, real_y)
 
+        elif self.dop_obj is not None:
+            self.draw_dop_obj(real_x, real_y)
 
     def draw_tree(self, real_x, real_y):
 
@@ -197,26 +118,27 @@ class Part:
 
     def draw_flower(self, real_x, real_y):
 
+        if self.type == 'Цветочная поляна':
+            plus_h = pixel_size * boost_flower
+        else:
+            plus_h = 0
+
         pygame.draw.line(screen, self.solor_tree,
                          (real_x + pixel_size / 2, real_y),
-                         (real_x + pixel_size / 2, real_y - pixel_size), 6)
+                         (real_x + pixel_size / 2, real_y - pixel_size - plus_h), 6)
         pygame.draw.circle(screen, self.flower_color,
-                           (real_x + pixel_size / 2, real_y - pixel_size), pixel_size / 2.5)
+                           (real_x + pixel_size / 2, real_y - pixel_size - plus_h), pixel_size / 2.5)
         pygame.draw.circle(screen, yellow,
-                           (real_x + pixel_size / 2, real_y - pixel_size), pixel_size / 4.8)
+                           (real_x + pixel_size / 2, real_y - pixel_size - plus_h), pixel_size / 4.8)
 
 
     def draw_mushroom(self, real_x, real_y):
 
-        hat_width = pixel_size
-        hat_height = pixel_size * 0.45
-        stem_width = pixel_size * 0.25
-        stem_height = pixel_size * 0.45
         cx = real_x + pixel_size / 2
         cy = real_y
 
         pygame.draw.rect(screen, mushroom_color_st,
-            (cx - stem_width / 2, cy - stem_height, stem_width, stem_height))
+            (cx - stem_width / 2, cy - stem_height, stem_width, stem_height + 1))
 
         pygame.draw.ellipse(screen, self.color_mushroom,
             (cx - hat_width / 2, cy - stem_height - hat_height + 4, hat_width, hat_height))
@@ -246,15 +168,73 @@ class Part:
             pygame.draw.rect(screen, self.solor_ore, (x, y, r, r))
 
 
+    def draw_dop_obj(self, real_x, real_y):
+
+        if self.type == 'Поле' or self.type == 'Лес' or self.type == 'Цветочная поляна':
+
+            pygame.draw.line(screen, self.solor_tree,
+                             (real_x + pixel_size / 2, real_y),
+                             (real_x + pixel_size / 2, real_y - pixel_size / 1.5), 6)
+            pygame.draw.line(screen, self.solor_tree,
+                             (real_x + pixel_size / 2, real_y),
+                             (real_x + pixel_size / 1.25, real_y - pixel_size / 1.5), 6)
+            pygame.draw.line(screen, self.solor_tree,
+                             (real_x + pixel_size / 2, real_y),
+                             (real_x + pixel_size * 0.2, real_y - pixel_size / 1.5), 6)
+
+        elif self.type == 'Пустыня':
+
+            pygame.draw.line(screen, self.dirt_color,
+                (real_x + pixel_size / 2, real_y),
+                (real_x + pixel_size / 2, real_y - pixel_size / 1.3), 8)
+            pygame.draw.line(screen, self.dirt_color,
+                (real_x + pixel_size / 2, real_y - pixel_size / 3),
+                (real_x + pixel_size * 0.25, real_y - pixel_size / 1.2), 6)
+            pygame.draw.line(screen, self.dirt_color,
+                (real_x + pixel_size / 2, real_y - pixel_size / 3),
+                (real_x + pixel_size * 0.75, real_y - pixel_size / 1.2), 6)
+
+        elif self.type == 'Скалы':
+
+            p1 = (real_x + pixel_size * 0.25, real_y)
+            p2 = (real_x + pixel_size * 0.75, real_y)
+            p3 = (real_x + pixel_size * 0.50, real_y - pixel_size * 0.6)
+            pygame.draw.polygon(screen, self.dirt_color, (p1, p2, p3))
+
+        elif self.type == 'Тайга':
+
+            pygame.draw.circle(
+                screen, self.solor_tree,
+                (real_x + pixel_size / 2, real_y - pixel_size * 0.3),
+                pixel_size * 0.35)
+            pygame.draw.circle(
+                screen, self.solor_tree,
+                (real_x + pixel_size / 2, real_y - pixel_size * 0.77),
+                pixel_size * 0.25)
+
+        elif self.type == 'Пустошь':
+
+            pygame.draw.line(screen, black,
+                (real_x + pixel_size * 0.35, real_y),
+                (real_x + pixel_size * 0.30, real_y - pixel_size * 0.5), 5)
+            pygame.draw.line(screen, black,
+                (real_x + pixel_size * 0.50, real_y),
+                (real_x + pixel_size * 0.50, real_y - pixel_size * 0.6), 7)
+            pygame.draw.line(screen, black,
+                (real_x + pixel_size * 0.65, real_y),
+                (real_x + pixel_size * 0.70, real_y - pixel_size * 0.5), 5)
+
+
 def params_to_part(x, y_old):
 
-    global biom, nerownost, tree_shans, flower_shans, obriv, mushroom_shans
+    global biom, nerownost, tree_shans, flower_shans, obriv, mushroom_shans, dop_obj_shans
 
     tree = None
     ore = None
     flower = None
     mushroom = None
     color_ore = None
+    dop_obj = None
 
     if random.random() < new_biome_shans:
         biom = random.choice(list_biome)
@@ -263,10 +243,11 @@ def params_to_part(x, y_old):
         flower_shans = biom_config[biom][3]
         mushroom_shans = biom_config[biom][5]
         obriv = biom_config[biom][6]
+        dop_obj_shans = biom_config[biom][7]
 
     if random.random() < nerownost:
         if random.random() < obriv:
-            y = y_old + (random.randint(4, 7) * random.choice((-1, 1)))
+            y = max(y_old + (random.randint(params_obriv[0], params_obriv[1]) * random.choice((-1, 1))), min_y)
         else:
             y = random.randint(max(y_old - biom_config[biom][2], min_y + 5),
                                max(y_old + biom_config[biom][2], min_y + 6))
@@ -285,6 +266,9 @@ def params_to_part(x, y_old):
     elif random.random() < mushroom_shans:
         mushroom = random.choice((mushroom_color_p, mushroom_color_m))
 
+    elif random.random() < dop_obj_shans:
+        dop_obj = True
+
     if land[-1].ore is None:
         if random.random() < ore_shans:
             ore = random.randint(9, -min_y + 4)
@@ -296,15 +280,15 @@ def params_to_part(x, y_old):
 
     dirt_color = biom_config[biom][4]
 
-    return x, y, tree, ore, flower, dirt_color, mushroom, color_ore
+    return x, y, tree, ore, flower, dirt_color, mushroom, color_ore, dop_obj
 
 
 def new_part():
 
     x = len(land)
     y_old = land[-1].y
-    x, y, tree, ore, flower, dirt_color, mushroom, color_ore = params_to_part(x, y_old)
-    land.append(Part(x, y, tree, ore, flower, dirt_color, mushroom, color_ore))
+    x, y, tree, ore, flower, dirt_color, mushroom, color_ore, dop_obj = params_to_part(x, y_old)
+    land.append(Chunck(x, y, tree, ore, flower, dirt_color, mushroom, color_ore, dop_obj))
 
 
 def camere_move():
@@ -444,10 +428,17 @@ def all_button():
     speed_button(events)
     speed_button_s(events)
 
-    screen.blit(font_plus.render(f"Блоков прогружено: {len(land)}", True, black), (200, 15))
-    screen.blit(font_plus.render(f"Биом: {land[int(camera_x)].type}", True, black), (200, 40))
-    screen.blit(font.render(f"Блоков прогружено: {len(land)}", True, text_color), (202, 17))
-    screen.blit(font.render(f"Биом: {land[int(camera_x)].type}", True, text_color), (202, 42))
+
+def info_text():
+
+    text_info_list = (f"Биом: {land[int(camera_x)].type}",
+                      f"Погода: {('Ясно', 'Осадки')[rain]}",
+                      f"Блоков прогружено: {len(land)}",
+                      f"x:{int(camera_x)}   y:{int(camera_y+40)}")
+
+    for text in range(len(text_info_list)):
+        screen.blit(font_plus.render(text_info_list[text], True, black), (200, 15 + text * 25))
+        screen.blit(font.render(text_info_list[text], True, text_color), (202, 17 + text * 25))
 
 
 def weather():
@@ -458,17 +449,37 @@ def weather():
         rain = not rain
         intensity = random.choice(rain_intensity)
     if rain:
+        if random.random() < lighting_shans:
+            draw_lighting()
         for _ in range(intensity):
             rain_drops.append([random.randint(0, WIDTH), random.randint(-100, -30)])
 
     draw_rain()
 
 
+def draw_lighting():
+
+    pygame.draw.polygon(screen, text_color, [(0, 0),
+                                             (WIDTH * 0.4, 0), (WIDTH * 0.35, HEIGHT * 0.25),(0, HEIGHT * 0.2)])
+    pygame.draw.polygon(
+        screen, text_color,
+        [(WIDTH * 0.2, HEIGHT * 0.35),(WIDTH * 0.6, HEIGHT * 0.3),
+         (WIDTH * 0.55, HEIGHT * 0.45),(WIDTH * 0.15, HEIGHT * 0.5)])
+
+
 def draw_rain():
 
+    if land[int(camera_x)].type == 'Тайга':
+        rain_speed_t = snow_speed
+    elif land[int(camera_x)].type == 'Пустыня':
+        rain_drops.clear()
+        return
+    else:
+        rain_speed_t = rain_speed
+
     for i in rain_drops:
-        pygame.draw.line(screen, text_color, (i[0], i[1]), (i[0], i[1] + rain_speed))
-        i[1] += rain_speed
+        pygame.draw.line(screen, text_color, (i[0], i[1]), (i[0], i[1] + rain_speed_t))
+        i[1] += rain_speed_t
     rain_drops[:] = [d for d in rain_drops if d[1] < HEIGHT + 50]
 
 
@@ -483,10 +494,15 @@ def draw_world():
     for i in land[start_d:end_d]:
         i.draw()
 
-land.append(Part())
-for _ in range(x_generete):
-    new_part()
-print('симуляция запущена.')
+
+def start():
+    land.append(Chunck())
+    for _ in range(x_generete):
+        new_part()
+    print('симуляция запущена.')
+
+
+start()
 
 while run:
 
@@ -498,6 +514,8 @@ while run:
     camere_move()
 
     all_button()
+
+    info_text()
 
     pygame.display.update()
 
